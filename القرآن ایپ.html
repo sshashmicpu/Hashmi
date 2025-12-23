@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>القرآن - سید ساخر ہاشمی</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --main: #004d40; --accent: #ffc107; --bg: #ffffff; --text: #1a1a1a; --card: #ffffff; --border: #eeeeee; }
+        body.dark { --bg: #000000; --text: #e0e0e0; --card: #121212; --border: #333333; --main: #00695c; }
+        
+        * { box-sizing: border-box; transition: background 0.3s, color 0.3s; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Noto Nastaliq Urdu', serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; }
+
+        header { background: var(--main); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; }
+        .container { padding: 15px; max-width: 600px; margin: auto; }
+        .card { background: var(--card); border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        
+        input, select { width: 100%; border: 1.5px solid var(--border); padding: 12px; border-radius: 10px; font-family: inherit; margin-bottom: 10px; background: var(--card); color: var(--text); outline: none; text-align: center; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        button { background: var(--main); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; font-family: inherit; cursor: pointer; font-size: 13px; }
+
+        .audio-btn { font-size: 12px; cursor: pointer; color: var(--main); background: rgba(0,0,0,0.05); border-radius: 50%; padding: 4px 6px; vertical-align: middle; margin-left: 5px; border: none; }
+
+        /* Mushaf Templates */
+        .temp-classic { background: #ffffff !important; color: #111 !important; }
+        .temp-sepia { background: #f4ecd8 !important; color: #5b4636 !important; }
+        .temp-green { background: #e8f5e9 !important; color: #1b5e20 !important; }
+        .temp-amoled { background: #000000 !important; color: #dddddd !important; }
+
+        #mushaf-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; overflow-y: auto; padding: 70px 20px 250px 20px; text-align: center; scroll-behavior: auto; }
+        .mushaf-content { font-family: 'Amiri', serif; line-height: 2.2; }
+        .inline-urdu { font-family: 'Noto Nastaliq Urdu', serif; color: var(--main); font-size: 0.6em; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05); display: block; line-height: 2.5; }
+        
+        .settings-bar { position: sticky; top: -10px; background: inherit; padding: 10px; display: flex; justify-content: center; gap: 10px; z-index: 2002; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 1px solid #999; }
+
+        .scroll-controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--main); color: white; padding: 8px 15px; border-radius: 30px; display: flex; gap: 10px; align-items: center; z-index: 5000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .scroll-controls button { background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 15px; border:none; color:white; font-size: 16px; }
+
+        .ayah-result { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 15px; border-right: 5px solid var(--main); }
+        .ar-matan { font-family: 'Amiri', serif; font-size: 24px; direction: rtl; display: none; margin: 10px 0; color: #000; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 3000; padding: 20px; overflow-y: auto; }
+        .modal-content { background: #fff; color: #000; padding: 25px; border-radius: 15px; max-width: 500px; margin: 20px auto; text-align: right; line-height: 1.8; }
+        .close-btn { background: #f44336; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; float: left; }
+
+        #translation-panel { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 4px solid var(--main); padding: 20px 20px 80px 20px; z-index: 4000; display: none; border-radius: 20px 20px 0 0; max-height: 40vh; overflow-y: auto; font-family: 'Noto Nastaliq Urdu', serif; }
+    </style>
+</head>
+<body class="light">
+
+<header>
+    <button onclick="toggleTheme()" style="background:transparent; font-size:20px; border:none; color:white;">🌓</button>
+    <div style="font-weight:bold; font-size:22px;">القرآن <span onclick="openAbout()" style="cursor:pointer; font-size:18px;">ⓘ</span></div>
+    <div style="width: 40px;"></div>
+</header>
+
+<div class="container">
+    <div class="card" id="download-card">
+        <button onclick="downloadAll()" id="downloadBtn" style="background: #e91e63; width: 100%;">⬇ مکمل قرآن آف لائن سیو کریں</button>
+    </div>
+
+    <button id="resumeBtn" style="display:none; width:100%; margin-bottom:10px; background:#e0f2f1; color:#004d40; border:none; padding:12px; border-radius:10px; font-weight:bold;" onclick="resumeLast()">↺ آخری بار یہاں پڑھا تھا</button>
+    
+    <div class="card">
+        <select id="surahSelect" onchange="document.getElementById('sNum').value = this.value">
+            <option value="">سورہ منتخب کریں...</option>
+        </select>
+        <div class="grid-3">
+            <input type="number" id="sNum" placeholder="سورہ">
+            <input type="number" id="aNum" placeholder="آیت">
+            <input type="number" id="pNum" placeholder="پارہ">
+        </div>
+        <div class="grid-2">
+            <button onclick="searchQuery()">سرچ کریں</button>
+            <button style="background:var(--accent); color:black;" onclick="loadMushaf(false)">مصحف موڈ</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <input type="text" id="wordKey" placeholder="اردو یا عربی لفظ">
+        <button onclick="searchWord()" style="background: #333; width: 100%;">لفظی سرچ</button>
+    </div>
+
+    <div id="count-badge" style="background:var(--accent); color:#000; padding:8px; border-radius:10px; text-align:center; margin-bottom:15px; font-weight:bold; display:none;"></div>
+    <div id="displayArea"></div>
+</div>
+
+<div id="aboutModal" class="modal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeAbout()">✕</button>
+        <div style="text-align: center; color: #004d40; font-weight: bold; font-size: 16px; margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+            القرآن، توفیقِ خداوندی کا نتیجہ، سید ساخر ہاشمی کی کاوشوں کا ثمر، اہل ایمان کے لیے ایک تحفہ اور آخرت کا سرمایہ ہے۔
+        </div>
+        <p><strong>ایپ کی خصوصیات:</strong></p>
+        <ul style="list-style: none; padding: 0;">
+            <li>● مکمل قرآن پاک کا عربی متن اور اردو ترجمہ۔</li>
+            <li>● آف لائن سہولت: انٹرنیٹ کی ضرورت نہیں۔</li>
+            <li>● مصحف موڈ: خوبصورت انٹرفیس اور آٹو سکرول۔</li>
+            <li>● آڈیو تلاوت: ہر آیت کو سننے کی سہولت۔</li>
+        </ul>
+        <hr>
+        <div style="background: #fff3e0; padding: 10px; border-radius: 8px; font-size: 12px; text-align: center; color: #5d4037; border: 1px solid #ffe0b2;">
+            بشری تقاضوں کے پیشِ نظر اگر اس ایپ میں کہیں کوئی انجانی غلطی یا کوتاہی رہ گئی ہو تو ہم اللہ تعالیٰ کے حضور اور معزز قارئین سے معذرت خواہ ہیں۔
+        </div>
+        <p style="font-size:11px; text-align:center; margin-top:10px;">یہ ایپ خالصتاً رضائے الہی کے لیے بنائی گئی ہے۔</p>
+    </div>
+</div>
+
+<div id="mushaf-overlay" class="temp-classic">
+    <div class="settings-bar">
+        <div class="dot" style="background:#fff" onclick="setTemp('temp-classic')"></div>
+        <div class="dot" style="background:#f4ecd8" onclick="setTemp('temp-sepia')"></div>
+        <div class="dot" style="background:#e8f5e9" onclick="setTemp('temp-green')"></div>
+        <div class="dot" style="background:#000" onclick="setTemp('temp-amoled')"></div>
+        <button onclick="toggleTarjumaView()" style="background:var(--main); padding:2px 10px; width:auto;">T</button>
+        <button onclick="changeFontSize(-2)" style="padding:2px 8px; width:auto;">A-</button>
+        <button onclick="changeFontSize(2)" style="padding:2px 8px; width:auto;">A+</button>
+    </div>
+    <button class="close-btn" style="position:fixed; top:15px; right:15px; z-index:3005;" onclick="closeMushaf()">✕</button>
+    <div id="mushaf-text" class="mushaf-content" style="font-size: 30px;"></div>
+
+    <div class="scroll-controls">
+        <button onclick="changeSpeed(-1)">−</button>
+        <span id="speedVal" style="font-family:sans-serif; font-size:12px; min-width: 40px; text-align: center;">Spd: 0</span>
+        <button onclick="changeSpeed(1)">+</button>
+        <button id="playBtn" onclick="toggleAutoScroll()" style="background:var(--accent); color:#000; margin-right:5px;">Play</button>
+    </div>
+</div>
+
+<div id="translation-panel">
+    <div style="display:flex; justify-content:space-between; font-weight:bold; color:var(--main); margin-bottom:10px;">
+        <span>ترجمہ: محمد حسین نجفی</span>
+        <span onclick="closeTrans()" style="cursor:pointer; color:red;">[بند کریں]</span>
+    </div>
+    <div id="trans-content" style="line-height: 2;"></div>
+</div>
+
+<script>
+    let currentFS = 30; let showTarjumaInline = false; 
+    let scrollInt = null; let scrollSpeed = 0;
+    const surahNames = ["الفاتحة","البقرة","آل عمران","النساء","المائدة","الأنعام","الأعراف","الأنفال","التوبة","يونس","هود","يوسف","الرعد","إبراهيم","الحجر","النحل","الإسراء","الكهف","مريم","طه","الأنبياء","الحج","المؤمنون","النور","الفرقان","الشعراء","النمل","القصص","العنكبوت","الروم","لقمان","السجدة","الأحزاب","سبأ","فاطر","يس","الصافات","ص","الزمر","غافر","فصلت","الشورى","الزخرف","الدخان","الجاثية","الأحقاف","محمد","الفتح","الحجرات","ق","الذاريات","الطور","النجم","القمر","الرحمن","الواقعة","الحديد","المجادلة","الحشر","الممتحنة","الصف","الجمعة","المنافقون","التغابن","الطلاق","التحريم","الملک","القلم","الحاقة","المعارج","نوح","الجن","المزمل","المدثر","القيامة","الإنسان","المرسلات","النبأ","النازعات","عبس","التكوير","الإنفطار","المطففين","الإنشقاق","البروج","الطارق","الأعلى","الغاشية","الفجر","البلد","الشمس","الليل","الضحى","الشرح","التين","العلق","القدر","البينة","الزلزلة","العاديات","القارعة","التكاثر","العصر","الهمزة","الفيل","قريش","الماعون","الکوثر","الكافرون","النصر","المسد","الإخلاص","الفلق","الناس"];
+
+    window.onload = () => {
+        const select = document.getElementById('surahSelect');
+        surahNames.forEach((n, i) => select.add(new Option(`${i+1}. ${n}`, i+1)));
+        if(localStorage.getItem('q_last')) document.getElementById('resumeBtn').style.display='block';
+        if(localStorage.getItem('quran_offline_data')) document.getElementById('download-card').style.display='none';
+    };
+
+    function openAbout() { document.getElementById('aboutModal').style.display='block'; }
+    function closeAbout() { document.getElementById('aboutModal').style.display='none'; }
+    function toggleTheme() { document.body.classList.toggle('dark'); }
+    function setTemp(t) { document.getElementById('mushaf-overlay').className = t; }
+    function changeFontSize(v) { currentFS += v; document.getElementById('mushaf-text').style.fontSize = currentFS + 'px'; }
+
+    async function downloadAll() {
+        const btn = document.getElementById('downloadBtn'); btn.innerText = "لوڈنگ...";
+        const [arRes, urRes] = await Promise.all([
+            fetch('https://api.alquran.cloud/v1/quran/quran-simple'),
+            fetch('https://api.alquran.cloud/v1/quran/ur.najafi')
+        ]);
+        const arData = await arRes.json(), urData = await urRes.json();
+        localStorage.setItem('quran_offline_data', JSON.stringify({surahs: arData.data.surahs, urduSurahs: urData.data.surahs}));
+        location.reload();
+    }
+
+    function searchQuery() {
+        const s = document.getElementById('sNum').value;
+        const a = document.getElementById('aNum').value;
+        const p = document.getElementById('pNum').value;
+        const data = JSON.parse(localStorage.getItem('quran_offline_data'));
+        if(!data) return alert("پہلے قرآن ڈاؤن لوڈ کریں");
+        
+        if(s && a) {
+            const surah = data.surahs[s-1];
+            const urSurah = data.urduSurahs[s-1];
+            const ayah = surah.ayahs[a-1];
+            const urAyah = urSurah.ayahs[a-1];
+            if(ayah) renderResults([{ar: ayah.text, ur: urAyah.text, surah: surah.name, ayah: a}], "");
+            else alert("آیت نمبر درست نہیں");
+        } else if(p) { loadMushaf(false); }
+        else { loadMushaf(false); }
+    }
+
+    function loadMushaf(isResume = false) {
+        let s = document.getElementById('sNum').value, p = document.getElementById('pNum').value;
+        let lastPos = 0;
+        if(isResume) { 
+            const last = JSON.parse(localStorage.getItem('q_last')); 
+            s = last.s; p = last.p; lastPos = last.pos || 0;
+        } else {
+            localStorage.setItem('q_last', JSON.stringify({s, p, pos: 0}));
+        }
+        
+        if(!s && !p) return alert("نمبر درج کریں");
+        const data = JSON.parse(localStorage.getItem('quran_offline_data'));
+        const overlay = document.getElementById('mushaf-overlay');
+        overlay.style.display = "block";
+        setTimeout(() => { overlay.scrollTop = lastPos; }, 100);
+
+        if(s) { renderMushaf(data.surahs[s-1].name, data.surahs[s-1].ayahs, s, data.urduSurahs[s-1].ayahs); }
+        else {
+            let pAr = [], pUr = [];
+            data.surahs.forEach((surah, idx) => {
+                surah.ayahs.forEach((ayah, aIdx) => {
+                    if(ayah.juz == p) { pAr.push({...ayah, surahNum: surah.number}); pUr.push(data.urduSurahs[idx].ayahs[aIdx]); }
+                });
+            });
+            renderMushaf(`پارہ ${p}`, pAr, null, pUr);
+        }
+    }
+
+    function renderMushaf(title, ayahs, sId, urduAyahs) {
+        window.currentAyahs = ayahs; window.currentUrdu = urduAyahs;
+        let html = `<h2 style="color:var(--main);">${title}</h2>`;
+        ayahs.forEach((a, i) => {
+            let sNum = sId || a.surahNum;
+            let audioUrl = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${a.number}.mp3`;
+            html += `<div style="display:inline;">
+                <button class="audio-btn" onclick="playAyah('${audioUrl}', this)">▶</button>
+                <span style="cursor:pointer;" id="ayah-${a.numberInSurah}" onclick="getTranslation(${sNum}, ${a.numberInSurah})"> ${a.text} ﴿${a.numberInSurah}﴾ </span>
+                ${showTarjumaInline ? `<span class="inline-urdu">${urduAyahs[i].text}</span>` : ''}
+            </div> `;
+        });
+        document.getElementById('mushaf-text').innerHTML = html;
+        document.getElementById('mushaf-text').style.fontSize = currentFS + 'px';
+    }
+
+    function toggleAutoScroll() {
+        if(scrollInt) { 
+            clearInterval(scrollInt); scrollInt = null; 
+            document.getElementById('playBtn').innerText="Play"; 
+            scrollSpeed = 0;
+        } else { 
+            scrollSpeed = 1; startScrolling(); 
+            document.getElementById('playBtn').innerText="Pause"; 
+        }
+        document.getElementById('speedVal').innerText = `Spd: ${scrollSpeed}`;
+    }
+
+    function startScrolling() {
+        clearInterval(scrollInt);
+        if(scrollSpeed <= 0) return;
+        let interval = Math.max(5, 100 / scrollSpeed); 
+        scrollInt = setInterval(() => {
+            document.getElementById('mushaf-overlay').scrollBy(0, 1);
+        }, interval);
+    }
+
+    function changeSpeed(v) {
+        scrollSpeed = Math.max(0, scrollSpeed + v);
+        document.getElementById('speedVal').innerText = `Spd: ${scrollSpeed}`;
+        if(scrollSpeed > 0) {
+            if(!scrollInt) document.getElementById('playBtn').innerText="Pause";
+            startScrolling();
+        } else {
+            toggleAutoScroll();
+        }
+    }
+
+    function playAyah(url, btn) {
+        if(window.curAud) window.curAud.pause();
+        window.curAud = new Audio(url); window.curAud.play();
+        btn.innerText = "🔊"; window.curAud.onended = () => btn.innerText = "▶";
+    }
+
+    function toggleTarjumaView() { showTarjumaInline = !showTarjumaInline; renderMushaf("", window.currentAyahs, null, window.currentUrdu); }
+    function getTranslation(s, a) {
+        document.getElementById('translation-panel').style.display = 'block';
+        const data = JSON.parse(localStorage.getItem('quran_offline_data'));
+        const ayah = data.urduSurahs[s-1].ayahs.find(x => x.numberInSurah == a);
+        document.getElementById('trans-content').innerText = ayah ? ayah.text : "...";
+    }
+
+    function searchWord() {
+        const word = document.getElementById('wordKey').value.trim();
+        if(!word) return;
+        const data = JSON.parse(localStorage.getItem('quran_offline_data'));
+        let res = [];
+        data.surahs.forEach((s, sIdx) => {
+            s.ayahs.forEach((a, aIdx) => {
+                const ur = data.urduSurahs[sIdx].ayahs[aIdx].text;
+                if(a.text.includes(word) || ur.includes(word)) res.push({ ar: a.text, ur, surah: s.name, ayah: a.numberInSurah });
+            });
+        });
+        renderResults(res, word);
+    }
+
+    function renderResults(list, word) {
+        const area = document.getElementById('displayArea'); area.innerHTML = "";
+        document.getElementById('count-badge').style.display = 'block';
+        document.getElementById('count-badge').innerText = `${list.length} نتائج ملے`;
+        list.slice(0, 50).forEach((item, idx) => {
+            area.innerHTML += `<div class="ayah-result">
+                <div style="font-size:12px; color:var(--main); font-weight:bold;">${item.surah} (${item.ayah})</div>
+                <div id="ar-res-${idx}" class="ar-matan">${item.ar}</div>
+                <div class="urdu" style="font-family:'Noto Nastaliq Urdu', serif; line-height:2.2;">${item.ur.replace(new RegExp(word, 'g'), `<span style="background:var(--accent)">${word}</span>`)}</div>
+                <div class="grid-2" style="margin-top:10px;">
+                    <button onclick="copy(this, '${item.ur}')">کاپی</button>
+                    <button style="background:#555;" onclick="toggleMatan(${idx}, this)">متن دکھائیں</button>
+                </div>
+            </div>`;
+        });
+    }
+
+    function toggleMatan(id, btn) {
+        const el = document.getElementById(`ar-res-${id}`);
+        const isHidden = el.style.display === "none" || el.style.display === "";
+        el.style.display = isHidden ? "block" : "none";
+        btn.innerText = isHidden ? "متن چھپائیں" : "متن دکھائیں";
+    }
+
+    function closeMushaf() { 
+        const overlay = document.getElementById('mushaf-overlay');
+        const last = JSON.parse(localStorage.getItem('q_last'));
+        localStorage.setItem('q_last', JSON.stringify({...last, pos: overlay.scrollTop}));
+        overlay.style.display="none"; clearInterval(scrollInt); location.reload(); 
+    }
+    
+    function resumeLast() { loadMushaf(true); }
+    function closeTrans() { document.getElementById('translation-panel').style.display = 'none'; }
+    function copy(btn, text) { navigator.clipboard.writeText(text); btn.innerText="کاپی ہو گیا"; setTimeout(()=>btn.innerText="کاپی", 2000); }
+</script>
+</body>
+</html>
